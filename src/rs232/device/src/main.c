@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Sun Sep 20 14:08:30 2009 texane
-** Last update Sat Nov 21 16:32:32 2009 texane
+** Last update Sat Nov 21 17:01:20 2009 texane
 */
 
 
@@ -15,6 +15,8 @@
 #include "m600.h"
 
 
+
+#if 0
 
 static void toggle_led(void)
 {
@@ -30,6 +32,7 @@ static void toggle_led(void)
   LATA = ledv;
 }
 
+#endif
 
 
 int main(void)
@@ -45,8 +48,6 @@ int main(void)
 
   while (!is_done)
     {
-      toggle_led();
-
       serial_sleep();
 
       /* not waken by a serial byte being avail */
