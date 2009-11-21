@@ -1,0 +1,46 @@
+. remove serial_readn, loop with a select
+. make a buffering system for read_card
+
+
+/* todos: regarder comment ca marche au
+   niveau libusb, paradigme (possible de
+   faire event driven?) -> coller au modele
+ */
+
+struct m600_read_ctx
+{
+  unsigned int count;
+
+  uint16_t data[];
+};
+
+
+int m600_start_read(m600_read_ctx_t** ctx, unsigned int)
+{
+}
+
+
+int m600_complete_read()
+{
+}
+
+
+int m600_read_card(m600_read_ctx_t** ctx, unsigned int count)
+{
+  return -1;
+}
+
+
+void m600_destroy_context(m600_read_ctx_t* ctx)
+{
+}
+
+
+unsigned int m600_count_card(, void*)
+{
+}
+
+
+void m600_foreach_card(m600_read_ctx_t*, void*)
+{
+}

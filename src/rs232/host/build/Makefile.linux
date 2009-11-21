@@ -1,0 +1,35 @@
+##
+## Made by fabien le mentec <texane@gmail.com>
+## 
+## Started on  Sun Oct 25 10:42:55 2009 texane
+## Last update Sat Nov 21 16:14:48 2009 texane
+##
+
+
+
+CC	:=	gcc
+LD	:=	gcc
+CFLAGS	:=	-Wall -Werror -D_DEBUG=1 -I../src
+LFLAGS	:=	
+RM	:=	rm -f
+
+
+BIN	:=	serial
+
+SRCS	:=	../src/main.c		\
+		../src/serial.c		\
+		../src/m600.c
+
+OBJS	:=	$(SRCS:.c=.o)
+
+
+all	:	$(BIN)
+$(BIN)	:	$(OBJS)
+		$(LD) $(LFLAGS) -o $(BIN) $(OBJS)
+clean	:
+		$(RM) $(OBJS)
+fclean	:	clean
+		$(RM) $(BIN)
+re	:	fclean all
+%.o	:	%.c
+		$(CC) $(CFLAGS) -o $@ -c $<

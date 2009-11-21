@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Thu Nov 19 20:03:19 2009 texane
-** Last update Sat Nov 21 00:59:45 2009 texane
+** Last update Sat Nov 21 15:07:43 2009 texane
 */
 
 
@@ -33,6 +33,8 @@ static void initialize(void)
 }
 
 
+#if 0
+
 static void switch_led(void)
 {
   static unsigned int ledv = 0;
@@ -50,6 +52,8 @@ static void switch_led(void)
     }
 }
 
+#endif
+
 
 void main(void)
 {
@@ -61,8 +65,6 @@ void main(void)
 
   while(1)
     {
-      switch_led();
-
       INTCON = 0;
 
       usb_sleep();
