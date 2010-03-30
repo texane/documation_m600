@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Sat Nov 21 14:15:52 2009 texane
+** Last update Tue Mar 30 17:38:47 2010 texane
 */
 
 
@@ -134,14 +134,19 @@ int main(int ac, char** av)
   if (m600_open(&handle) != M600_ERROR_SUCCESS)
     goto on_error;
 
-#if 0
+#if 1
   {
-    m600_alarms_t alarms;
+/*     m600_alarms_t alarms; */
 
-    if (m600_read_alarms(handle, &alarms) != M600_ERROR_SUCCESS)
-      goto on_error;
+/*     if (m600_read_alarms(handle, &alarms) != M600_ERROR_SUCCESS) */
+/*       goto on_error; */
 
-    print_alarms(alarms);
+/*     print_alarms(alarms); */
+
+    if (m600_read_cards(handle, 1, NULL, NULL) != M600_ERROR_SUCCESS)
+      printf("error\n");
+    else
+      printf("succes\n");
   }
 #else
   {

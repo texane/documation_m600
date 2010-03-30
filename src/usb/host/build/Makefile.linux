@@ -2,14 +2,15 @@
 ## Made by fabien le mentec <texane@gmail.com>
 ## 
 ## Started on  Sun Oct 25 10:42:55 2009 texane
-## Last update Wed Nov 18 17:28:27 2009 texane
+## Last update Fri Mar 26 16:34:25 2010 texane
 ##
 
 
 
 CC	:=	gcc
 LD	:=	gcc
-CFLAGS	:=	-Wall -Werror -D_DEBUG=1 -I../src
+#CFLAGS	:=	-Wall -Werror -D_DEBUG=1 -I../src
+CFLAGS	:=	-Wall -D_DEBUG=1 -I../src
 LFLAGS	:=	-lusb-1.0
 RM	:=	rm -f
 

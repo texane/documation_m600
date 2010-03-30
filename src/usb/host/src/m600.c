@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Sat Nov 21 08:56:37 2009 texane
+** Last update Fri Mar 26 16:49:35 2010 texane
 */
 
 
@@ -428,8 +428,11 @@ m600_error_t m600_read_cards
       if (error != M600_ERROR_SUCCESS)
 	break;
 
-      if (fn(cmd.rep.card_data, cmd.rep.alarms, ctx))
-	break;
+      if (fn != NULL)
+      {
+	if (fn(cmd.rep.card_data, cmd.rep.alarms, ctx))
+	  break;
+      }
     }
 
   return error;

@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Sat Nov 21 14:16:49 2009 texane
+** Last update Tue Mar 30 17:53:03 2010 texane
 */
 
 
@@ -91,36 +91,50 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 {
   unsigned int col_count = M600_COLUMN_COUNT;
 
+#if 0 /* simple_test */
+
   /* wait for the ready conditions(p.38) */
-  while (!M600_PIN_READY)
+  while (M600_PIN_READY)
     ;
 
   /* wait for previous cycle to end */
-  while (M600_PIN_BUSY)
+  while (!M600_PIN_BUSY)
     ;
+
+#endif
 
   /* initiate a read cycle. according
      to the documentation (p.38), it
      is better to wait for the busy
      condition than idling for 1usecs
    */
-  M600_PIN_PICK_CMD = 1;
+  M600_PIN_PICK_CMD = 0;
 
+#if 0
   /* wait for the cycle to start */
-  while (M600_PIN_BUSY)
+  while (!M600_PIN_BUSY)
     {
       /* an error occured. 6 attempts are made
 	 every 50 ms, for a total of 300ms max
        */
 
-      if (M600_PIN_ERROR)
+      if (!M600_PIN_ERROR)
 	{
-	  M600_PIN_PICK_CMD = 0;
+	  M600_PIN_PICK_CMD = 1;
 	  return m600_read_alarms();
 	}
     }
+#else /* simple_test, wait a little bit */
+  {
+    unsigned int i;
+    for (i = 0x100; i > 0; --i)
+      ;
+  }
+#endif
 
-  M600_PIN_PICK_CMD = 0;
+  M600_PIN_PICK_CMD = 1;
+
+#if 0 /* simple test */
 
   /* read the data */
   while (col_count)
@@ -132,12 +146,12 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 	 every 864 usecs on the M600.
       */
 
-      if (M600_PIN_INDEX_MARK)
+      if (!M600_PIN_INDEX_MARK)
 	{
 	  /* data available. the index mark
 	     signal held true for 6 usecs
 	  */
-	  while (M600_PIN_INDEX_MARK)
+	  while (!M600_PIN_INDEX_MARK)
 	    ;
 
 	  *col_data = read_data_reg();
@@ -146,6 +160,8 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 	  --col_count;
 	}
     }
+
+#endif
 
   return M600_ALARM_NONE;
 }
