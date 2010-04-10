@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Tue Mar 30 17:53:03 2010 texane
+** Last update Tue Apr  6 21:00:01 2010 texane
 */
 
 
@@ -44,6 +44,9 @@ static m600_reply_t m600_reply;
 
 #define M600_TRIS_PICK_CMD TRISDbits.TRISD3
 #define M600_PIN_PICK_CMD LATDbits.LATD3
+
+#define M600_TRIS_RESET_CMD TRISDbits.TRISD4
+#define M600_PIN_RESET_CMD LATDbits.LATD4
 
 #define M600_TRIS_INDEX_MARK TRISCbits.TRISC0
 #define M600_PIN_INDEX_MARK PORTCbits.RC0
@@ -93,11 +96,16 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 
 #if 0 /* simple_test */
 
-  /* wait for the ready conditions(p.38) */
+  /* wait for the ready conditions(p.38)
+     ready is 4v if there is no card
+     ready is 0v if there are cards
+   */
   while (M600_PIN_READY)
     ;
 
-  /* wait for previous cycle to end */
+  /* wait for previous cycle to end
+     0v indicates busy is true
+   */
   while (!M600_PIN_BUSY)
     ;
 
@@ -124,6 +132,9 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 	  return m600_read_alarms();
 	}
     }
+
+  M600_PIN_PICK_CMD = 1;
+
 #else /* simple_test, wait a little bit */
   {
     unsigned int i;
@@ -131,8 +142,6 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
       ;
   }
 #endif
-
-  M600_PIN_PICK_CMD = 1;
 
 #if 0 /* simple test */
 
@@ -197,6 +206,7 @@ void m600_setup(void)
      overlap with same register */
 
   M600_TRIS_PICK_CMD = 0;
+  M600_PIN_PICK_CMD = 1;
 
   /* automaton state */
 

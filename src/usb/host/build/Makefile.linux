@@ -2,16 +2,16 @@
 ## Made by fabien le mentec <texane@gmail.com>
 ## 
 ## Started on  Sun Oct 25 10:42:55 2009 texane
-## Last update Fri Mar 26 16:34:25 2010 texane
+## Last update Sat Apr 10 07:06:00 2010 texane
 ##
 
 
 
 CC	:=	gcc
 LD	:=	gcc
-#CFLAGS	:=	-Wall -Werror -D_DEBUG=1 -I../src
+#CFLAGS	:=	-Wall -Werror -D_DEBUG=1 -I/home/texane/install/include -I../src
 CFLAGS	:=	-Wall -D_DEBUG=1 -I../src
-LFLAGS	:=	-lusb-1.0
+LFLAGS	:=	-L/home/texane/install/lib -lusb
 RM	:=	rm -f
 
 

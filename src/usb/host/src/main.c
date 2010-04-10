@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Tue Mar 30 17:38:47 2010 texane
+** Last update Sat Apr 10 09:18:46 2010 texane
 */
 
 
@@ -20,18 +20,18 @@ alarm_to_string(unsigned int a)
   const char* s = "UNKNOWN_ALARM";
 
   switch (a)
-    {
+  {
 #define ALARM_CASE(E)				\
     case M600_ALARM_ ## E:			\
       s = #E;					\
-      break
+    break
 
-      ALARM_CASE(ERROR);
-      ALARM_CASE(HOPPER_CHECK);
-      ALARM_CASE(MOTION_CHECK);
+    ALARM_CASE(ERROR);
+    ALARM_CASE(HOPPER_CHECK);
+    ALARM_CASE(MOTION_CHECK);
 
-    default: break;
-    }
+  default: break;
+  }
 
   return s;
 }
@@ -44,10 +44,10 @@ print_alarms(m600_alarms_t alarms)
 
   printf("alarms:\n");
   for (a = 0; a < M600_ALARM_MAX; ++a)
-    {
-      if (alarms & (1 << a))
-	printf(" %s\n", alarm_to_string(a));
-    }
+  {
+    if (alarms & (1 << a))
+      printf(" %s\n", alarm_to_string(a));
+  }
 }
 
 
@@ -65,13 +65,13 @@ static int check_buffer(const uint16_t* buffer)
   unsigned int i;
 
   for (i = 0; i < M600_COLUMN_COUNT; ++i)
+  {
+    if (buffer[i] != (uint16_t)i)
     {
-      if (buffer[i] != (uint16_t)i)
-	{
-	  printf("@%u 0x%04x\n", i, buffer[i]);
-	  return -1;
-	}
+      printf("@%u 0x%04x\n", i, buffer[i]);
+      return -1;
     }
+  }
 
   return 0;
 }
@@ -88,14 +88,14 @@ static void print_pins(const uint8_t* buffer)
   unsigned int i;
 
   for (i = 0; i < M600_PIN_COUNT / 8; ++i, ++buffer)
-    {
-      uint8_t n = *buffer;
+  {
+    uint8_t n = *buffer;
 
-      for (j = 0; j < 8; ++j, n <<= 1)
-	printf("%c", '0' + GET_LAST_BIT(n));
+    for (j = 0; j < 8; ++j, n <<= 1)
+      printf("%c", '0' + GET_LAST_BIT(n));
 
-      printf(" ");
-    }
+    printf(" ");
+  }
 #else /* port like printing */
 
 #define GET_FIRST_BIT(N) ((N) & 1)
@@ -104,18 +104,18 @@ static void print_pins(const uint8_t* buffer)
   int k;
 
   for (k = 1; k >= 0; --k)
+  {
+    for (i = M600_PIN_COUNT / 8 - 1; i >= 0; --i)
     {
-      for (i = M600_PIN_COUNT / 8 - 1; i >= 0; --i)
-	{
-	  uint8_t n = buffer[i] >> k;
+      uint8_t n = buffer[i] >> k;
 
-	  for (j = 0; j < 4; ++j, n >>= 2)
-	    printf("%c", '0' + GET_FIRST_BIT(n));
-	  printf(" ");
-	}
-
-      printf("\n");
+      for (j = 0; j < 4; ++j, n >>= 2)
+	printf("%c", '0' + GET_FIRST_BIT(n));
+      printf(" ");
     }
+
+    printf("\n");
+  }
   
 #endif
 
@@ -134,7 +134,7 @@ int main(int ac, char** av)
   if (m600_open(&handle) != M600_ERROR_SUCCESS)
     goto on_error;
 
-#if 1
+#if 1 /* test */
   {
 /*     m600_alarms_t alarms; */
 
