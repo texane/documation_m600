@@ -2,13 +2,14 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Sat Apr 10 09:18:46 2010 texane
+** Last update Sat Apr 10 09:29:06 2010 texane
 */
 
 
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "m600.h"
 #include "../../../common/m600_types.h"
 
@@ -127,6 +128,7 @@ int main(int ac, char** av)
 {
   int error = -1;
   m600_handle_t* handle = NULL;
+  const char* const opt = ac == 1 ? "test" : av[1];
 
   if (m600_initialize() != M600_ERROR_SUCCESS)
     goto on_error;
@@ -134,21 +136,23 @@ int main(int ac, char** av)
   if (m600_open(&handle) != M600_ERROR_SUCCESS)
     goto on_error;
 
-#if 1 /* test */
+  if (!strcmp(opt, "card"))
   {
-/*     m600_alarms_t alarms; */
-
-/*     if (m600_read_alarms(handle, &alarms) != M600_ERROR_SUCCESS) */
-/*       goto on_error; */
-
-/*     print_alarms(alarms); */
-
     if (m600_read_cards(handle, 1, NULL, NULL) != M600_ERROR_SUCCESS)
       printf("error\n");
     else
       printf("succes\n");
   }
-#else
+  else if (!strcmp(opt, "alarm"))
+  {
+    m600_alarms_t alarms;
+
+    if (m600_read_alarms(handle, &alarms) != M600_ERROR_SUCCESS)
+      goto on_error;
+
+    print_alarms(alarms);
+  }
+  else if (!strcmp(opt, "test"))
   {
     uint16_t data[M600_COLUMN_COUNT];
 
@@ -169,7 +173,10 @@ int main(int ac, char** av)
 
     print_pins((const uint8_t*)data);
   }
-#endif
+  else
+  {
+    printf("invalidOption: %s\n", opt);
+  }
 
   error = 0;
 
