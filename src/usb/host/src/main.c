@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Sat Apr 10 09:29:06 2010 texane
+** Last update Mon Apr 26 20:03:15 2010 texane
 */
 
 
@@ -35,6 +35,28 @@ alarm_to_string(unsigned int a)
   }
 
   return s;
+}
+
+
+static int on_card(const uint16_t* data, m600_alarms_t alarm, void* ctx)
+{
+  unsigned int i;
+
+  for (i = 0; i < 80; ++i)
+  {
+    if (!(i % 8))
+      printf("\n");
+    printf(" %03x", ((uint16_t)~(data[i])) & 0xfff);
+  }
+
+  for (i = 0; i < 80; ++i)
+  {
+    if (!(i % 10))
+      printf("\n");
+    printf("%c", ~(data[i]));
+  }
+
+  return 0;
 }
 
 
@@ -138,7 +160,7 @@ int main(int ac, char** av)
 
   if (!strcmp(opt, "card"))
   {
-    if (m600_read_cards(handle, 1, NULL, NULL) != M600_ERROR_SUCCESS)
+    if (m600_read_cards(handle, 1, on_card, NULL) != M600_ERROR_SUCCESS)
       printf("error\n");
     else
       printf("succes\n");

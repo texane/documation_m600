@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Tue Apr  6 21:00:01 2010 texane
+** Last update Mon Apr 26 19:36:22 2010 texane
 */
 
 
@@ -141,9 +141,12 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
     for (i = 0x100; i > 0; --i)
       ;
   }
+
+  M600_PIN_PICK_CMD = 1;
+
 #endif
 
-#if 0 /* simple test */
+#if 1 /* simple test */
 
   /* read the data */
   while (col_count)
@@ -200,6 +203,9 @@ void m600_setup(void)
   M600_TRIS_BUSY = 1;
 
   /* outputs */
+
+  M600_TRIS_RESET_CMD = 0;
+  M600_PIN_RESET_CMD = 1;
 
   /* note: must come after the
      alarm tris is set since this
