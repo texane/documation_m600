@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Thu Apr 29 17:12:12 2010 texane
+** Last update Sun May 23 14:02:36 2010 texane
 */
 
 
@@ -94,8 +94,6 @@ static uint16_t read_data_reg(void)
 static m600_alarms_t m600_read_card(uint16_t* col_data)
 {
   unsigned int col_count = M600_COLUMN_COUNT;
-
-  m600_print_signals();
 
 #if 0 /* simple_test */
 

@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Sun May 23 13:57:59 2010 texane
+** Last update Sun May 23 14:51:19 2010 texane
 */
 
 
@@ -363,6 +363,29 @@ static m600_error_t send_recv_cmd
 #endif /* CONFIG_LIBUSB_VERSION */
 
 
+/* endianness */
+
+static int is_mach_le = 0;
+
+static inline int get_is_mach_le(void)
+{
+  const uint16_t magic = 0x0102;
+
+  if ((*(const uint8_t*)&magic) == 0x02)
+    return 1;
+
+  return 0;
+}
+
+static inline uint16_t le16_to_mach(uint16_t n)
+{
+  if (!is_mach_le)
+    n = ((n >> 8) & 0xff) | ((n & 0xff) << 8);
+
+  return n;
+}
+
+
 /* exported functions */
 
 void m600_cleanup(void)
@@ -385,6 +408,8 @@ void m600_cleanup(void)
 
 m600_error_t m600_initialize(void)
 {
+  is_mach_le = get_is_mach_le();
+
 #if CONFIG_LIBUSB_VERSION
 
   usb_init();
@@ -650,40 +675,105 @@ m600_error_t m600_read_cards
 }
 
 
-#if 0 /* todo */
-static void set_alarm_bits(unsgined int* bitmap, m600_alarm_t alarm)
+static void alarms_to_bitmap(m600_bitmap_t* bitmap, m600_alarms_t alarms)
 {
+  switch (alarms)
+  {
+  case M600_ALARM_ERROR:
+    *bitmap |= M600_BIT_M600_ERROR;
+    break;
+
+  case M600_ALARM_HOPPER_CHECK:
+    *bitmap |= M600_BIT_HOPPER_CHECK;
+
+  case M600_ALARM_MOTION_CHECK:
+    *bitmap |= M600_BIT_MOTION_CHECK;
+
+  default:
+    break;
+  }
 }
-#endif
+
+
+static void error_to_bitmap(m600_bitmap_t* bitmap, m600_error_t error)
+{
+  /* todo */
+  *bitmap |= M600_BIT_UNDEF;
+}
+
+
+/* buffer containing the last read card */
+static unsigned int card_buffer[M600_COLUMN_COUNT];
+
+static int convert_buffer
+(const uint16_t* buffer, m600_alarms_t alarms, void* palarms)
+{
+  unsigned int i;
+
+  *(m600_alarms_t*)palarms = alarms;
+  if (alarms)
+    return 0;
+
+  for (i = 0; i < M600_COLUMN_COUNT; ++i)
+  {
+    /* sdcc stores numbers in little endian */
+    card_buffer[i] = le16_to_mach(buffer[i]);
+  }
+
+  return 0;
+}
 
 
 m600_bitmap_t m600_read_card(m600_handle_t* handle)
 {
-#if 0 /* todo */
   m600_bitmap_t bitmap = 0;
-  m600_alarms_t alarms = 0;
   m600_error_t error;
+  m600_alarms_t alarms;
 
-  /* check if the hopper is empty */
-  error = m600_read_alarms(handle, &alarms);
-  if (error != M600_ERROR_SUCCESS)
-    return 0;
-
-  if (M600_IS_ALARM(alarms, ERROR))
-    
-
-  /* read the card */
+  error = m600_read_cards(handle, 1, convert_buffer, &alarms);
+  if (error == M600_ERROR_SUCCESS)
+  {
+    if (alarms)
+    {
+      bitmap |= M600_BIT_ERROR;
+      alarms_to_bitmap(&bitmap, alarms);
+    }
+  }
+  else
+  {
+    bitmap |= M600_BIT_ERROR;
+    error_to_bitmap(&bitmap, error);
+  }
 
   return bitmap;
-#else
-  return 0;
-#endif /* todos */
+}
+
+
+void m600_get_card_buffer(const void** buffer)
+{
+  *buffer = card_buffer;
 }
 
 
 m600_bitmap_t m600_get_state(m600_handle_t* handle)
 {
-  return 0;
+  m600_bitmap_t bitmap = 0;
+  m600_error_t error;
+  m600_alarms_t alarms;
+
+  error = m600_read_alarms(handle, &alarms);
+  if (error != M600_ERROR_SUCCESS)
+  {
+    bitmap |= M600_BIT_ERROR;
+    error_to_bitmap(&bitmap, error);
+  }
+  else if (alarms)
+  {
+    bitmap |= M600_BIT_ERROR;
+    alarms_to_bitmap(&bitmap, alarms);
+  }
+
+  return bitmap;
 }
 
 
