@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 17:09:47 2009 texane
-** Last update Sat Nov 21 09:03:20 2009 texane
+** Last update Sun May 23 13:57:56 2010 texane
 */
 
 
@@ -41,6 +41,17 @@ enum m600_error
 
 typedef enum m600_error m600_error_t;
 
+/* error bitmap */
+typedef unsigned int m600_bitmap_t;
+
+#define M600_BIT_SUCCESS (1 << 0)
+#define M600_BIT_UNDEF (1 << 1) /* undefined error */
+#define M600_BIT_IO (1 << 2) /* communication (usb) error */
+#define M600_BIT_M600 (1 << 3) /* m600 generic error */
+#define M600_BIT_HOPPER_CHECK (1 << 4) /* hopper is empty */
+#define M600_BIT_MOTION_CHECK (1 << 5) /* */
+#define M600_BIT_NOT_CONNECTED (1 << 6) /* device not connected */
+
 
 /* card callback */
 
@@ -55,6 +66,8 @@ m600_error_t m600_open(m600_handle_t**);
 void m600_close(m600_handle_t*);
 m600_error_t m600_read_alarms(m600_handle_t*, m600_alarms_t*);
 m600_error_t m600_read_cards(m600_handle_t*, unsigned int, m600_cardfn_t, void*);
+m600_bitmap_t m600_read_card(m600_handle_t*);
+m600_bitmap_t m600_get_state(m600_handle_t*);
 m600_error_t m600_fill_data(m600_handle_t*, uint16_t*);
 m600_error_t m600_read_pins(m600_handle_t*, uint8_t*);
 

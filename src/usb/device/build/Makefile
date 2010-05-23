@@ -2,7 +2,7 @@
 ## Made by fabien le mentec <texane@gmail.com>
 ## 
 ## Started on  Sun Sep 20 00:28:27 2009 texane
-## Last update Sat Nov 21 15:03:22 2009 texane
+## Last update Thu Apr 29 19:27:19 2010 texane
 ##
 
 
@@ -41,7 +41,9 @@ CSRCS	:=	../src/main.c 			\
 		../src/ep1.c			\
 		../src/ep2.c			\
 		../src/usb.c			\
-		../src/usb_descriptors.c
+		../src/usb_descriptors.c	\
+		../src/serial.c			\
+		../src/osc.c
 ASRCS	:=
 
 OBJS	:=	$(CSRCS:.c=.o)			\

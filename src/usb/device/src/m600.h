@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 13:59:45 2009 texane
-** Last update Sat Nov 21 00:42:59 2009 texane
+** Last update Thu Apr 29 17:06:48 2010 texane
 */
 
 
@@ -19,6 +19,7 @@
 void m600_setup(void);
 void m600_start_request(m600_request_t);
 void m600_schedule(void);
+void m600_print_signals(void);
 
 
 

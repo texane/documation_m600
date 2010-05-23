@@ -2,12 +2,13 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Mon Apr 26 19:36:22 2010 texane
+** Last update Thu Apr 29 17:12:12 2010 texane
 */
 
 
 
 #include <pic18fregs.h>
+#include "serial.h"
 #include "ep2.h"
 #include "stdint.h"
 #include "../../../common/m600_types.h"
@@ -93,6 +94,8 @@ static uint16_t read_data_reg(void)
 static m600_alarms_t m600_read_card(uint16_t* col_data)
 {
   unsigned int col_count = M600_COLUMN_COUNT;
+
+  m600_print_signals();
 
 #if 0 /* simple_test */
 
@@ -296,4 +299,26 @@ void m600_schedule(void)
   ep2_num_bytes_to_send = sizeof(m600_reply_t);
   ep2_source_data = (void*)&m600_reply;
   prepare_ep2_in();
+}
+
+
+static void print_pin(unsigned char n)
+{
+  if (n) serial_writeb('1');
+  else serial_writeb('0');
+}
+
+
+void m600_print_signals(void)
+{
+  print_pin(M600_PIN_ERROR);
+  print_pin(M600_PIN_HOPPER_CHECK);
+  print_pin(M600_PIN_MOTION_CHECK);
+
+  print_pin(M600_PIN_INDEX_MARK);
+  print_pin(M600_PIN_READY);
+  print_pin(M600_PIN_BUSY);
+
+  serial_writeb('\r');
+  serial_writeb('\n');
 }

@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Sat Apr 10 09:18:05 2010 texane
+** Last update Sun May 23 13:57:59 2010 texane
 */
 
 
@@ -647,6 +647,43 @@ m600_error_t m600_read_cards
   }
 
   return error;
+}
+
+
+#if 0 /* todo */
+static void set_alarm_bits(unsgined int* bitmap, m600_alarm_t alarm)
+{
+}
+#endif
+
+
+m600_bitmap_t m600_read_card(m600_handle_t* handle)
+{
+#if 0 /* todo */
+  m600_bitmap_t bitmap = 0;
+  m600_alarms_t alarms = 0;
+  m600_error_t error;
+
+  /* check if the hopper is empty */
+  error = m600_read_alarms(handle, &alarms);
+  if (error != M600_ERROR_SUCCESS)
+    return 0;
+
+  if (M600_IS_ALARM(alarms, ERROR))
+    
+
+  /* read the card */
+
+  return bitmap;
+#else
+  return 0;
+#endif /* todos */
+}
+
+
+m600_bitmap_t m600_get_state(m600_handle_t* handle)
+{
+  return 0;
 }
 
 

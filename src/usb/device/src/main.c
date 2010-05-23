@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Thu Nov 19 20:03:19 2009 texane
-** Last update Sat Nov 21 15:07:43 2009 texane
+** Last update Thu Apr 29 17:10:47 2010 texane
 */
 
 
@@ -10,6 +10,7 @@
 #pragma stack 0x200 255
 
 #include <pic18fregs.h>
+#include "serial.h"
 #include "common_types.h"
 #include "m600.h"
 #include "usb.h"
@@ -59,9 +60,13 @@ void main(void)
 {
   initialize();
 
+  serial_setup();
+
   init_usb();
 
   m600_setup();
+
+  m600_print_signals();
 
   while(1)
     {
