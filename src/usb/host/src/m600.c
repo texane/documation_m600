@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Fri May 28 08:32:23 2010 texane
+** Last update Fri May 28 08:50:45 2010 texane
 */
 
 
@@ -388,7 +388,11 @@ static inline uint16_t le16_to_mach(uint16_t n)
 
 /* forward decl */
 
+#if CONFIG_LIBUSB_VERSION
 static m600_error_t open_m600_usb_handle(usb_dev_handle**, int);
+#else
+static m600_error_t open_m600_usb_handle(libusb_dev_handle**, int);
+#endif
 
 static int find_m600_device(void)
 {
@@ -518,7 +522,7 @@ static m600_error_t open_m600_usb_handle
 #else
 
 static m600_error_t open_m600_usb_handle
-(usb_dev_handle** usb_handle, int enum_only)
+(libusb_dev_handle** usb_handle, int enum_only)
 {
   /* @see the above comment for enum_only meaning */
 
@@ -645,14 +649,14 @@ void m600_close(m600_handle_t* handle)
 
 #else
 
+  if (handle->usb_handle != NULL)
+    libusb_close(handle->usb_handle);
+
   if (handle->req_trans != NULL)
     libusb_free_transfer(handle->req_trans);
 
   if (handle->rep_trans != NULL)
     libusb_free_transfer(handle->rep_trans);
-
-  if (handle->usb_handle != NULL)
-    libusb_close(handle->usb_handle);
 
 #endif
 
