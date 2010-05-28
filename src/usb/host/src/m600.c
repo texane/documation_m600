@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Fri May 28 08:50:45 2010 texane
+** Last update Fri May 28 09:19:49 2010 texane
 */
 
 
@@ -363,6 +363,50 @@ static m600_error_t send_recv_cmd
 #endif /* CONFIG_LIBUSB_VERSION */
 
 
+/* forward decls */
+
+#if CONFIG_LIBUSB_VERSION
+static m600_error_t open_m600_usb_handle(usb_dev_handle**, int);
+static void close_m600_usb_handle(usb_dev_handle*);
+#else
+static m600_error_t open_m600_usb_handle(libusb_dev_handle**, int);
+static void close_m600_usb_handle(libusb_dev_handle**, int);
+#endif
+
+static int find_m600_device(void);
+
+static m600_error_t send_recv_cmd_or_reopen
+(
+ m600_handle_t* handle,
+ m600_cmd_t* cmd
+)
+{
+  /* send_recv_cmd or reopen handle on libusb failure */
+
+  m600_error_t error = send_recv_cmd(handle, cmd);
+  if (error != M600_ERROR_SUCCESS)
+  {
+    if (find_m600_device() == -1)
+      GOTO_ERROR(M600_ERROR_NOT_FOUND);
+
+    /* reopen the usb handle */
+
+    close_m600_usb_handle(handle->usb_handle);
+
+    error = open_m600_usb_handle(&handle->usb_handle, 0);
+    if (error != M600_ERROR_SUCCESS)
+      GOTO_ERROR(error);
+
+    /* resend the command */
+
+    error = send_recv_cmd(handle, cmd);
+  }
+
+ on_error:
+  return error;
+}
+
+
 /* endianness */
 
 static int is_mach_le = 0;
@@ -386,13 +430,7 @@ static inline uint16_t le16_to_mach(uint16_t n)
 }
 
 
-/* forward decl */
-
-#if CONFIG_LIBUSB_VERSION
-static m600_error_t open_m600_usb_handle(usb_dev_handle**, int);
-#else
-static m600_error_t open_m600_usb_handle(libusb_dev_handle**, int);
-#endif
+/* find m600 device wrapper */
 
 static int find_m600_device(void)
 {
@@ -459,6 +497,11 @@ m600_error_t m600_initialize(void)
 
 #if CONFIG_LIBUSB_VERSION
 
+static void close_m600_usb_handle(usb_dev_handle* usb_handle)
+{
+  usb_close(usb_handle);
+}
+
 static m600_error_t open_m600_usb_handle
 (usb_dev_handle** usb_handle, int enum_only)
 {
@@ -520,6 +563,11 @@ static m600_error_t open_m600_usb_handle
 }
 
 #else
+
+static void close_m600_usb_handle(libusb_dev_handle* usb_handle)
+{
+  libusb_close(usb_handle);
+}
 
 static m600_error_t open_m600_usb_handle
 (libusb_dev_handle** usb_handle, int enum_only)
@@ -644,13 +692,9 @@ void m600_close(m600_handle_t* handle)
 {
 #if CONFIG_LIBUSB_VERSION
 
-  if (handle->usb_handle != NULL)
-    usb_close(handle->usb_handle);
+  /* nothing to do */
 
 #else
-
-  if (handle->usb_handle != NULL)
-    libusb_close(handle->usb_handle);
 
   if (handle->req_trans != NULL)
     libusb_free_transfer(handle->req_trans);
@@ -659,6 +703,9 @@ void m600_close(m600_handle_t* handle)
     libusb_free_transfer(handle->rep_trans);
 
 #endif
+
+  if (handle->usb_handle != NULL)
+    close_m600_usb_handle(handle->usb_handle);
 
   free_m600_handle(handle);
 }
@@ -677,7 +724,7 @@ m600_error_t m600_read_alarms
 
   cmd.req = M600_REQ_READ_ALARMS;
 
-  error = send_recv_cmd(handle, &cmd);
+  error = send_recv_cmd_or_reopen(handle, &cmd);
   if (error != M600_ERROR_SUCCESS)
     return error;
 
@@ -702,7 +749,7 @@ m600_error_t m600_read_cards
   {
     cmd.req = M600_REQ_READ_CARD;
 
-    error = send_recv_cmd(handle, &cmd);
+    error = send_recv_cmd_or_reopen(handle, &cmd);
     if (error != M600_ERROR_SUCCESS)
       break;
 
@@ -736,8 +783,16 @@ static void alarms_to_bitmap(m600_bitmap_t* bitmap, m600_alarms_t alarms)
 
 static void error_to_bitmap(m600_bitmap_t* bitmap, m600_error_t error)
 {
-  /* todo */
-  *bitmap |= M600_BIT_UNDEF;
+  switch (error)
+  {
+  case M600_ERROR_NOT_FOUND:
+    *bitmap |= M600_BIT_NOT_CONNECTED;
+    break;
+
+  default:
+    *bitmap |= M600_BIT_UNDEF;
+    break;
+  }
 }
 
 
@@ -849,7 +904,7 @@ m600_error_t m600_fill_data(m600_handle_t* handle, uint16_t* data)
 
   cmd.req = M600_REQ_FILL_DATA;
 
-  error = send_recv_cmd(handle, &cmd);
+  error = send_recv_cmd_or_reopen(handle, &cmd);
   if (error != M600_ERROR_SUCCESS)
     return error;
 
@@ -866,7 +921,7 @@ m600_error_t m600_read_pins(m600_handle_t* handle, uint8_t* data)
 
   cmd.req = M600_REQ_READ_PINS;
 
-  error = send_recv_cmd(handle, &cmd);
+  error = send_recv_cmd_or_reopen(handle, &cmd);
   if (error != M600_ERROR_SUCCESS)
     return error;
 
