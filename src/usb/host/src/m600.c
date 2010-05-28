@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Fri May 28 07:27:37 2010 texane
+** Last update Fri May 28 08:32:23 2010 texane
 */
 
 
@@ -386,6 +386,25 @@ static inline uint16_t le16_to_mach(uint16_t n)
 }
 
 
+/* forward decl */
+
+static m600_error_t open_m600_usb_handle(usb_dev_handle**, int);
+
+static int find_m600_device(void)
+{
+  /* return 0 if m600 device found */
+
+  usb_dev_handle* dummy_handle = NULL;
+  int res = 0;
+
+  const m600_error_t error = open_m600_usb_handle(&dummy_handle, 1);
+  if (error == M600_ERROR_NOT_FOUND)
+    res = -1;
+
+  return res;
+}
+
+
 /* exported functions */
 
 void m600_cleanup(void)
@@ -436,8 +455,12 @@ m600_error_t m600_initialize(void)
 
 #if CONFIG_LIBUSB_VERSION
 
-static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
+static m600_error_t open_m600_usb_handle
+(usb_dev_handle** usb_handle, int enum_only)
 {
+  /* enum_only is used when we only wants to find
+     the m600 device. */
+
   m600_error_t error;
   struct usb_bus* bus;
 
@@ -453,6 +476,9 @@ static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
     {
       if (is_m600_device(dev))
       {
+	if (enum_only)
+	  GOTO_ERROR(M600_ERROR_SUCCESS);
+
 	*usb_handle = usb_open(dev);
 	if (*usb_handle == NULL)
 	  GOTO_ERROR(M600_ERROR_LIBUSB);
@@ -491,12 +517,16 @@ static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
 
 #else
 
-static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
+static m600_error_t open_m600_usb_handle
+(usb_dev_handle** usb_handle, int enum_only)
 {
+  /* @see the above comment for enum_only meaning */
+
   ssize_t i;
   ssize_t count;
   libusb_device** devs = NULL;
   libusb_device* dev;
+  m600_error_t error = M600_ERROR_SUCCESS;
 
   *usb_handle = NULL;
 
@@ -518,6 +548,10 @@ static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
   if (i == count)
     GOTO_ERROR(M600_ERROR_NOT_FOUND);
 
+  /* open for enumeration only */
+  if (enum_only)
+    GOTO_ERROR(M600_ERROR_SUCCESS);
+
   if (libusb_open(dev, usb_handle))
     GOTO_ERROR(M600_ERROR_LIBUSB);
 
@@ -533,12 +567,13 @@ static m600_error_t open_m600_usb_handle(usb_dev_handle** usb_handle)
     GOTO_ERROR(M600_ERROR_LIBUSB);
   }
 
-  return M600_ERROR_SUCCESS;
-
  on_error:
 
   if (devs != NULL)
     libusb_free_device_list(devs, 1);
+
+  if (error == M600_ERROR_SUCCESS)
+    return M600_ERROR_SUCCESS;
 
   if (*usb_handle != NULL)
   {
@@ -561,7 +596,7 @@ m600_error_t m600_open(m600_handle_t** m600_handle)
 
   /* open usb device */
 
-  error = open_m600_usb_handle(&usb_handle);
+  error = open_m600_usb_handle(&usb_handle, 0);
   if (error != M600_ERROR_SUCCESS)
     goto on_error;
 
@@ -760,6 +795,13 @@ m600_bitmap_t m600_get_state(m600_handle_t* handle)
   m600_bitmap_t bitmap = 0;
   m600_error_t error;
   m600_alarms_t alarms;
+
+  if (find_m600_device() == -1)
+  {
+    bitmap |= M600_BIT_ERROR;
+    bitmap |= M600_BIT_NOT_CONNECTED;
+    return bitmap;
+  }
 
   error = m600_read_alarms(handle, &alarms);
   if (error != M600_ERROR_SUCCESS)
