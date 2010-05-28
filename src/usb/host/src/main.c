@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Mon Apr 26 20:03:15 2010 texane
+** Last update Fri May 28 07:34:56 2010 texane
 */
 
 
@@ -13,6 +13,33 @@
 #include "m600.h"
 #include "../../../common/m600_types.h"
 
+
+
+static const char* __attribute__((unused))
+bitmap_to_string(m600_bitmap_t bitmap)
+{
+#define BIT_CASE(__bitmap, __bitname)		\
+  do {						\
+    if ((__bitmap) & (M600_BIT_##__bitname))	\
+    {						\
+      strcat(buf, ", ");			\
+      strcpy(buf, #__bitname);			\
+    }						\
+  } while (0)
+
+  static char buf[1024];
+
+  buf[0] = 0;
+
+  BIT_CASE(bitmap, ERROR);
+  BIT_CASE(bitmap, UNDEF);
+  BIT_CASE(bitmap, IO);
+  BIT_CASE(bitmap, HOPPER_CHECK);
+  BIT_CASE(bitmap, MOTION_CHECK);
+  BIT_CASE(bitmap, NOT_CONNECTED);
+
+  return buf;
+}
 
 
 static const char* __attribute__((unused))
@@ -57,6 +84,26 @@ static int on_card(const uint16_t* data, m600_alarms_t alarm, void* ctx)
   }
 
   return 0;
+}
+
+
+static void on_card2(const unsigned int* data)
+{
+  unsigned int i;
+
+  for (i = 0; i < 80; ++i)
+  {
+    if (!(i % 8))
+      printf("\n");
+    printf(" %03x", ((unsigned int)~(data[i])) & 0xfff);
+  }
+
+  for (i = 0; i < 80; ++i)
+  {
+    if (!(i % 10))
+      printf("\n");
+    printf("%c", ~(data[i]));
+  }
 }
 
 
@@ -158,14 +205,36 @@ int main(int ac, char** av)
   if (m600_open(&handle) != M600_ERROR_SUCCESS)
     goto on_error;
 
-  if (!strcmp(opt, "card"))
+  if (!strcmp(opt, "card0"))
   {
     if (m600_read_cards(handle, 1, on_card, NULL) != M600_ERROR_SUCCESS)
       printf("error\n");
     else
       printf("succes\n");
   }
-  else if (!strcmp(opt, "alarm"))
+  else if (!strcmp(opt, "card1"))
+  {
+    const m600_bitmap_t bitmap = m600_read_card(handle);
+    if (bitmap)
+    {
+      printf("%s\n", bitmap_to_string(bitmap));
+    }
+    else
+    {
+      const void* card_buffer;
+      m600_get_card_buffer(&card_buffer);
+      on_card2((const unsigned int*)card_buffer);
+    }
+  }
+  else if (!strcmp(opt, "state"))
+  {
+    const m600_bitmap_t bitmap = m600_get_state(handle);
+    if (bitmap)
+      printf("%s\n", bitmap_to_string(bitmap));
+    else
+      printf("no error to signal\n");
+  }
+  else if (!strcmp(opt, "alarms"))
   {
     m600_alarms_t alarms;
 

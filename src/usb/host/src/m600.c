@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Sun May 23 14:51:19 2010 texane
+** Last update Fri May 28 07:27:37 2010 texane
 */
 
 
@@ -777,7 +777,7 @@ m600_bitmap_t m600_get_state(m600_handle_t* handle)
 }
 
 
-/* testing */
+/* above routines are for testing */
 
 static void __attribute__((unused)) print_reply(const m600_reply_t* rep)
 {
