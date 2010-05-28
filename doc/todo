@@ -1,6 +1,10 @@
--- check for enless loops in the device code
+. tester
+ . inversion des signaux
+ . le bit M600_ERROR n a jamais ete dumpe, oublie lors des
+ tests precedent. dans le doute, on le SET comme les autre
+ ssi il est a 0 volts, mais il faut tester ca via un get_state
+ . test du reset
 
--- device reset
 
 -- invert the pin level signal
 

@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 15:33:43 2009 texane
-** Last update Sat Nov 21 08:55:33 2009 texane
+** Last update Fri May 28 17:11:53 2010 texane
 */
 
 
@@ -22,10 +22,12 @@
 #define M600_ALARM_ERROR 0
 #define M600_ALARM_HOPPER_CHECK 1
 #define M600_ALARM_MOTION_CHECK 2
-#define M600_ALARM_MAX 3
+#define M600_ALARM_NOT_READY 3
+#define M600_ALARM_MAX 4
 
 #define M600_SET_ALARM(A, B) do { A |= 1 << M600_ALARM_ ## B; } while (0)
 #define M600_IS_ALARM(A, B) ((A) & (1 << M600_ALARM_ ## B))
+#define M600_IS_SINGLE_ALARM(A, B) (A == (1 << M600_ALARM_ ## B))
 
 typedef uint16_t m600_alarms_t;
 
@@ -41,6 +43,7 @@ typedef uint16_t m600_alarms_t;
 #define M600_REQ_READ_ALARMS 1
 #define M600_REQ_FILL_DATA 2
 #define M600_REQ_READ_PINS 3
+#define M600_REQ_RESET_DEV 4
 #define M600_REQ_INVALID (m600_request_t)-1
 typedef uint8_t m600_request_t;
 

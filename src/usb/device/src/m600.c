@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Fri May 28 11:47:46 2010 texane
+** Last update Fri May 28 17:22:45 2010 texane
 */
 
 
@@ -52,8 +52,8 @@ static m600_reply_t m600_reply;
 #define M600_TRIS_INDEX_MARK TRISCbits.TRISC0
 #define M600_PIN_INDEX_MARK PORTCbits.RC0
 
-#define M600_TRIS_READY TRISCbits.TRISC1
-#define M600_PIN_READY PORTCbits.RC1
+#define M600_TRIS_NOT_READY TRISCbits.TRISC1
+#define M600_PIN_NOT_READY PORTCbits.RC1
 
 #define M600_TRIS_BUSY TRISCbits.TRISC2
 #define M600_PIN_BUSY PORTCbits.RC2
@@ -71,9 +71,16 @@ static m600_alarms_t m600_read_alarms(void)
       M600_SET_ALARM(E, C);			\
   } while (0)
 
-  SET_ALARM_IF_ASSERTED(alarms, ERROR);
-  SET_ALARM_IF_ASSERTED(alarms, HOPPER_CHECK);
-  SET_ALARM_IF_ASSERTED(alarms, MOTION_CHECK);
+#define SET_ALARM_IF_NOT_ASSERTED(E, C)		\
+  do {						\
+    if ((M600_PIN_ ## C) == 0)			\
+      M600_SET_ALARM(E, C);			\
+  } while (0)
+
+  SET_ALARM_IF_NOT_ASSERTED(alarms, ERROR);
+  SET_ALARM_IF_NOT_ASSERTED(alarms, HOPPER_CHECK);
+  SET_ALARM_IF_NOT_ASSERTED(alarms, MOTION_CHECK);
+  SET_ALARM_IF_NOT_ASSERTED(alarms, NOT_READY);
 
   return alarms;
 }
@@ -102,7 +109,7 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
      ready is 4v if there is no card
      ready is 0v if there are cards
    */
-  while (M600_PIN_READY)
+  while (M600_PIN_NOT_READY)
     ;
 
   /* wait for previous cycle to end
@@ -213,7 +220,7 @@ void m600_setup(void)
   M600_TRIS_DATA_HIGH = 1;
   M600_TRIS_ALARMS = 1;
   M600_TRIS_INDEX_MARK = 1;
-  M600_TRIS_READY = 1;
+  M600_TRIS_NOT_READY = 1;
   M600_TRIS_BUSY = 1;
 
   /* outputs */
@@ -290,6 +297,22 @@ void m600_schedule(void)
 	break;
       }
 
+    case M600_REQ_RESET_DEV:
+      {
+	/* wait for the ready signal is done in userland */
+
+	unsigned int countdown;
+
+	M600_PIN_RESET_CMD = 0;
+
+	for (countdown = 0x100; countdown; --countdown)
+	  ;
+
+	M600_PIN_RESET_CMD = 1;
+
+	break;
+      }
+
     case M600_REQ_INVALID:
     default:
       {
@@ -327,7 +350,7 @@ void m600_print_signals(void)
   print_pin(M600_PIN_MOTION_CHECK);
 
   print_pin(M600_PIN_INDEX_MARK);
-  print_pin(M600_PIN_READY);
+  print_pin(M600_PIN_NOT_READY);
   print_pin(M600_PIN_BUSY);
 
   serial_writeb('\r');

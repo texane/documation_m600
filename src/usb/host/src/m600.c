@@ -2,13 +2,14 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Fri May 28 09:19:49 2010 texane
+** Last update Fri May 28 17:17:18 2010 texane
 */
 
 
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #define CONFIG_LIBUSB_VERSION 1
@@ -447,6 +448,35 @@ static int find_m600_device(void)
 }
 
 
+/* reset the device */
+
+static m600_error_t reset_m600(m600_handle_t* handle)
+{
+  m600_cmd_t cmd;
+  cmd.req = M600_REQ_RESET_DEV;
+  return send_recv_cmd_or_reopen(handle, &cmd);
+}
+
+
+/* is the device ready */
+
+static m600_error_t is_m600_ready(m600_handle_t* handle, int* is_ready)
+{
+  m600_alarms_t alarms;
+  m600_error_t error;
+
+  error = m600_read_alarms(handle, &alarms);
+  if (error != M600_ERROR_SUCCESS)
+    return error;
+
+  *is_ready = 1;
+  if (M600_IS_ALARM(alarms, NOT_READY))
+    *is_ready = 0;
+
+  return M600_ERROR_SUCCESS;
+}
+
+
 /* exported functions */
 
 void m600_cleanup(void)
@@ -712,10 +742,7 @@ void m600_close(m600_handle_t* handle)
 
 
 m600_error_t m600_read_alarms
-(
- m600_handle_t* handle,
- m600_alarms_t* alarms
-)
+(m600_handle_t* handle, m600_alarms_t* alarms)
 {
   m600_error_t error;
   m600_cmd_t cmd;
@@ -735,28 +762,65 @@ m600_error_t m600_read_alarms
 
 
 m600_error_t m600_read_cards
-(
- m600_handle_t* handle,
- unsigned int count,
- m600_cardfn_t fn,
- void* ctx
-)
+(m600_handle_t* handle, unsigned int count, m600_cardfn_t fn, void* ctx)
 {
   m600_error_t error;
+  m600_alarms_t alarms;
   m600_cmd_t cmd;
 
+  /* check for device alarms */
+  error = m600_read_alarms(handle, &alarms);
+  if (error != M600_ERROR_SUCCESS)
+    GOTO_ERROR(error);
+
+  if (alarms)
+  {
+    /* reset the device if not ready */
+    if (M600_IS_SINGLE_ALARM(alarms, NOT_READY))
+    {
+      unsigned int retries;
+
+      error = reset_m600(handle);
+      if (error != M600_ERROR_SUCCESS)
+	GOTO_ERROR(error);
+
+      /* wait for at most 8 secondes */
+      for (retries = 0; retries < 8; ++retries)
+      {
+	int is_ready;
+
+	usleep(1000000);
+
+	error = is_m600_ready(handle, &is_ready);
+	if (error != M600_ERROR_SUCCESS)
+	  GOTO_ERROR(error);
+
+	if (is_ready)
+	  break;
+      }
+    }
+    else /* NOT_READY not the only alarm */
+    {
+      if (fn != NULL)
+	fn(NULL, alarms, ctx);
+      GOTO_ERROR(M600_ERROR_SUCCESS);
+    }
+  }
+
+  /* read count cards */
   for (; count; --count)
   {
     cmd.req = M600_REQ_READ_CARD;
 
     error = send_recv_cmd_or_reopen(handle, &cmd);
     if (error != M600_ERROR_SUCCESS)
-      break;
+      GOTO_ERROR(error);
 
     if ((fn != NULL) && fn(cmd.rep.card_data, cmd.rep.alarms, ctx))
       break;
   }
 
+ on_error:
   return error;
 }
 
@@ -771,9 +835,15 @@ static void alarms_to_bitmap(m600_bitmap_t* bitmap, m600_alarms_t alarms)
 
   case M600_ALARM_HOPPER_CHECK:
     *bitmap |= M600_BIT_HOPPER_CHECK;
+    break;
 
   case M600_ALARM_MOTION_CHECK:
     *bitmap |= M600_BIT_MOTION_CHECK;
+    break;
+
+  case M600_ALARM_NOT_READY:
+    *bitmap |= M600_BIT_NOT_READY;
+    break;
 
   default:
     break;
@@ -825,19 +895,10 @@ m600_bitmap_t m600_read_card(m600_handle_t* handle)
   m600_alarms_t alarms;
 
   error = m600_read_cards(handle, 1, convert_buffer, &alarms);
-  if (error == M600_ERROR_SUCCESS)
-  {
-    if (alarms)
-    {
-      bitmap |= M600_BIT_ERROR;
-      alarms_to_bitmap(&bitmap, alarms);
-    }
-  }
-  else
-  {
-    bitmap |= M600_BIT_ERROR;
+  if (error != M600_ERROR_SUCCESS)
     error_to_bitmap(&bitmap, error);
-  }
+  else if (alarms)
+    alarms_to_bitmap(&bitmap, alarms);
 
   return bitmap;
 }
@@ -856,23 +917,13 @@ m600_bitmap_t m600_get_state(m600_handle_t* handle)
   m600_alarms_t alarms;
 
   if (find_m600_device() == -1)
-  {
-    bitmap |= M600_BIT_ERROR;
-    bitmap |= M600_BIT_NOT_CONNECTED;
-    return bitmap;
-  }
+    return M600_BIT_NOT_CONNECTED;
 
   error = m600_read_alarms(handle, &alarms);
   if (error != M600_ERROR_SUCCESS)
-  {
-    bitmap |= M600_BIT_ERROR;
     error_to_bitmap(&bitmap, error);
-  }
   else if (alarms)
-  {
-    bitmap |= M600_BIT_ERROR;
     alarms_to_bitmap(&bitmap, alarms);
-  }
 
   return bitmap;
 }

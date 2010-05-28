@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Fri May 28 07:34:56 2010 texane
+** Last update Fri May 28 16:56:25 2010 texane
 */
 
 
@@ -31,12 +31,13 @@ bitmap_to_string(m600_bitmap_t bitmap)
 
   buf[0] = 0;
 
-  BIT_CASE(bitmap, ERROR);
   BIT_CASE(bitmap, UNDEF);
   BIT_CASE(bitmap, IO);
+  BIT_CASE(bitmap, M600_ERROR);
   BIT_CASE(bitmap, HOPPER_CHECK);
   BIT_CASE(bitmap, MOTION_CHECK);
   BIT_CASE(bitmap, NOT_CONNECTED);
+  BIT_CASE(bitmap, NOT_READY);
 
   return buf;
 }
@@ -57,6 +58,7 @@ alarm_to_string(unsigned int a)
     ALARM_CASE(ERROR);
     ALARM_CASE(HOPPER_CHECK);
     ALARM_CASE(MOTION_CHECK);
+    ALARM_CASE(NOT_READY);
 
   default: break;
   }
@@ -214,7 +216,8 @@ int main(int ac, char** av)
   }
   else if (!strcmp(opt, "card1"))
   {
-    const m600_bitmap_t bitmap = m600_read_card(handle);
+    m600_bitmap_t bitmap;
+    bitmap = m600_read_card(handle);
     if (bitmap)
     {
       printf("%s\n", bitmap_to_string(bitmap));
