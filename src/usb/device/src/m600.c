@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Sun May 23 14:02:36 2010 texane
+** Last update Fri May 28 11:47:46 2010 texane
 */
 
 
@@ -93,7 +93,8 @@ static uint16_t read_data_reg(void)
 
 static m600_alarms_t m600_read_card(uint16_t* col_data)
 {
-  unsigned int col_count = M600_COLUMN_COUNT;
+  unsigned int col_count;
+  unsigned int countdown;
 
 #if 0 /* simple_test */
 
@@ -116,65 +117,77 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
      to the documentation (p.38), it
      is better to wait for the busy
      condition than idling for 1usecs
+     but practically it doesnot seem
+     to work, so we wait.
    */
+
   M600_PIN_PICK_CMD = 0;
 
-#if 0
-  /* wait for the cycle to start */
+#if 0 /* wait for the cycle to start */
   while (!M600_PIN_BUSY)
-    {
-      /* an error occured. 6 attempts are made
-	 every 50 ms, for a total of 300ms max
-       */
-
-      if (!M600_PIN_ERROR)
-	{
-	  M600_PIN_PICK_CMD = 1;
-	  return m600_read_alarms();
-	}
-    }
-
-  M600_PIN_PICK_CMD = 1;
-
-#else /* simple_test, wait a little bit */
   {
-    unsigned int i;
-    for (i = 0x100; i > 0; --i)
-      ;
+    /* an error occured. 6 attempts are made
+       every 50 ms, for a total of 300ms max
+    */
+
+    if (!M600_PIN_ERROR)
+    {
+      M600_PIN_PICK_CMD = 1;
+      return m600_read_alarms();
+    }
   }
-
-  M600_PIN_PICK_CMD = 1;
-
+#else /* wait a bit for the cycle to start */
+  for (countdown = 0x100; countdown > 0; --countdown)
+    ;
 #endif
 
-#if 1 /* simple test */
+  M600_PIN_PICK_CMD = 1;
 
   /* read the data */
+
+  /* very approximative constant */
+#define COUNTDOWN_10MS 15000
+  countdown = COUNTDOWN_10MS;
+
+  col_count = M600_COLUMN_COUNT;
+
   while (col_count)
+  {
+    /* wait for the INDEX_MARK signal to
+       become true. it indicates data is
+       available (ie. storage completed).
+       the mark are generated periodically
+       every 864 usecs on the M600.
+    */
+
+    if ((--countdown) == 0)
+      return (M600_ALARM_ERROR | m600_read_alarms());
+
+    if (!M600_PIN_INDEX_MARK)
     {
-      /* wait for the INDEX_MARK signal to
-	 become true. it indicates data is
-	 available (ie. storage completed).
-	 the mark are generated periodically
-	 every 864 usecs on the M600.
+      /* data available. the index mark
+	 signal held true for 6 usecs
       */
 
-      if (!M600_PIN_INDEX_MARK)
-	{
-	  /* data available. the index mark
-	     signal held true for 6 usecs
-	  */
-	  while (!M600_PIN_INDEX_MARK)
-	    ;
+      /* reload the countdown */
+      countdown = COUNTDOWN_10MS;
 
-	  *col_data = read_data_reg();
+      while (!M600_PIN_INDEX_MARK)
+      {
+	if (!(--countdown))
+	  return (M600_ALARM_ERROR | m600_read_alarms());
+      }
 
-	  ++col_data;
-	  --col_count;
-	}
+      *col_data = read_data_reg();
+
+      /* reload the countdown */
+      countdown = COUNTDOWN_10MS;
+
+      /* advance position */
+      ++col_data;
+      --col_count;
     }
-
-#endif
+  }
 
   return M600_ALARM_NONE;
 }
