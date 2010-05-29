@@ -4,29 +4,4 @@
  tests precedent. dans le doute, on le SET comme les autre
  ssi il est a 0 volts, mais il faut tester ca via un get_state
  . test du reset
-
-
--- invert the pin level signal
-
--- device is in an invalid state when the following
-pin state holds
-
-[?] is_m600_device_164: device: 0x1d6b, 0x0001
-[?] is_m600_device_164: device: 0x067b, 0x2303
-[?] is_m600_device_164: device: 0x1d6b, 0x0001
-[?] is_m600_device_164: device: 0x2a2a, 0xf00f
-bufferOk
-
-not ok
-1100 1001 0000 0000 
-1110 1101 0000 0000 
-
-ok
-1100 0001 0000 0000 
-1110 1101 0000 0000 
-
-
--- tests
- . brancher le device, lancer application, debrancher, rebrancher, lire carte
- . brancher le device, lancer application, debrancher, lire carte
- . brancher le device, lancer application, debrancher, lire etat
+ . test des donnees lues: endianness ect...

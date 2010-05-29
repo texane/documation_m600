@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Fri May 28 17:22:45 2010 texane
+** Last update Sat May 29 05:58:05 2010 texane
 */
 
 
@@ -200,6 +200,21 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 }
 
 
+static void reset_device(void)
+{
+  /* reset the m600 device */
+
+  unsigned int countdown;
+
+  M600_PIN_RESET_CMD = 0;
+
+  for (countdown = 0x100; countdown; --countdown)
+    ;
+
+  M600_PIN_RESET_CMD = 1;
+}
+
+
 /* exported */
 
 void m600_setup(void)
@@ -234,6 +249,8 @@ void m600_setup(void)
 
   M600_TRIS_PICK_CMD = 0;
   M600_PIN_PICK_CMD = 1;
+
+  reset_device();
 
   /* automaton state */
 
@@ -301,14 +318,7 @@ void m600_schedule(void)
       {
 	/* wait for the ready signal is done in userland */
 
-	unsigned int countdown;
-
-	M600_PIN_RESET_CMD = 0;
-
-	for (countdown = 0x100; countdown; --countdown)
-	  ;
-
-	M600_PIN_RESET_CMD = 1;
+	reset_device();
 
 	break;
       }
