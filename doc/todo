@@ -1,7 +1,15 @@
+. le reset ne fonctionne pas
+ -> la commande reset ne fonctionne pa
+ -> le premier reset lors du setup() fonctionne
+ -> ensuite, ca fait hanger le device
+
+. chez miguel, il me semble que si erreur lors de lecture,
+  je dump quand meme une carte. donc bitmap. donc alarms mal
+  lues?
+
 . tester
- . inversion des signaux
+ . test du reset
  . le bit M600_ERROR n a jamais ete dumpe, oublie lors des
  tests precedent. dans le doute, on le SET comme les autre
  ssi il est a 0 volts, mais il faut tester ca via un get_state
- . test du reset
  . test des donnees lues: endianness ect...

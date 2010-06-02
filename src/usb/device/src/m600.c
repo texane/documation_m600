@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Sat May 29 05:58:05 2010 texane
+** Last update Wed Jun  2 22:00:40 2010 texane
 */
 
 
@@ -80,7 +80,7 @@ static m600_alarms_t m600_read_alarms(void)
   SET_ALARM_IF_NOT_ASSERTED(alarms, ERROR);
   SET_ALARM_IF_NOT_ASSERTED(alarms, HOPPER_CHECK);
   SET_ALARM_IF_NOT_ASSERTED(alarms, MOTION_CHECK);
-  SET_ALARM_IF_NOT_ASSERTED(alarms, NOT_READY);
+  SET_ALARM_IF_ASSERTED(alarms, NOT_READY);
 
   return alarms;
 }
@@ -206,9 +206,10 @@ static void reset_device(void)
 
   unsigned int countdown;
 
+  M600_TRIS_RESET_CMD = 0;
   M600_PIN_RESET_CMD = 0;
 
-  for (countdown = 0x100; countdown; --countdown)
+  for (countdown = 20000; countdown; --countdown)
     ;
 
   M600_PIN_RESET_CMD = 1;
@@ -319,7 +320,7 @@ void m600_schedule(void)
 	/* wait for the ready signal is done in userland */
 
 	reset_device();
-
+	do_reply = 1;
 	break;
       }
 

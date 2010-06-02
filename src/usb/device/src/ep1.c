@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Thu Nov 19 20:20:29 2009 texane
-** Last update Sat Nov 21 09:04:44 2009 texane
+** Last update Wed Jun  2 21:54:05 2010 texane
 */
 
 
@@ -39,6 +39,7 @@ void ep1_out(void)
 	case M600_REQ_READ_ALARMS:
 	case M600_REQ_FILL_DATA:
 	case M600_REQ_READ_PINS:
+	case M600_REQ_RESET_DEV:
 	  {
 	    m600_start_request(*(m600_request_t*)ep1_OutBuffer);
 	    break;

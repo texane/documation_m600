@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 17:09:47 2009 texane
-** Last update Fri May 28 16:33:26 2010 texane
+** Last update Wed Jun  2 21:41:10 2010 texane
 */
 
 
@@ -64,6 +64,7 @@ m600_error_t m600_initialize(void);
 void m600_cleanup(void);
 m600_error_t m600_open(m600_handle_t**);
 void m600_close(m600_handle_t*);
+m600_error_t m600_reset(m600_handle_t*);
 m600_error_t m600_read_alarms(m600_handle_t*, m600_alarms_t*);
 m600_error_t m600_read_cards(m600_handle_t*, unsigned int, m600_cardfn_t, void*);
 m600_bitmap_t m600_read_card(m600_handle_t*);

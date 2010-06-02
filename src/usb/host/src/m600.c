@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Tue Nov 17 04:21:01 2009 fabien le mentec
-** Last update Fri May 28 17:17:18 2010 texane
+** Last update Wed Jun  2 20:15:22 2010 texane
 */
 
 
@@ -454,7 +454,12 @@ static m600_error_t reset_m600(m600_handle_t* handle)
 {
   m600_cmd_t cmd;
   cmd.req = M600_REQ_RESET_DEV;
-  return send_recv_cmd_or_reopen(handle, &cmd);
+  return send_recv_cmd(handle, &cmd);
+}
+
+m600_error_t m600_reset(m600_handle_t* handle)
+{
+  return reset_m600(handle);
 }
 
 

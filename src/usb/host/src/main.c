@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Fri May 28 16:56:25 2010 texane
+** Last update Wed Jun  2 21:43:35 2010 texane
 */
 
 
@@ -266,6 +266,10 @@ int main(int ac, char** av)
       goto on_error;
 
     print_pins((const uint8_t*)data);
+  }
+  else if (!strcmp(opt, "reset"))
+  {
+    m600_reset(handle);
   }
   else
   {
