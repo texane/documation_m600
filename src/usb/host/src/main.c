@@ -2,7 +2,7 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 18 15:55:52 2009 texane
-** Last update Wed Jun  2 21:43:35 2010 texane
+** Last update Wed Jun  2 22:09:05 2010 texane
 */
 
 
@@ -44,7 +44,7 @@ bitmap_to_string(m600_bitmap_t bitmap)
 
 
 static const char* __attribute__((unused))
-alarm_to_string(unsigned int a)
+alarms_to_string(unsigned int a)
 {
   const char* s = "UNKNOWN_ALARM";
 
@@ -67,22 +67,29 @@ alarm_to_string(unsigned int a)
 }
 
 
-static int on_card(const uint16_t* data, m600_alarms_t alarm, void* ctx)
+static int on_card(const uint16_t* data, m600_alarms_t alarms, void* ctx)
 {
   unsigned int i;
 
-  for (i = 0; i < 80; ++i)
+  if (alarms)
   {
-    if (!(i % 8))
-      printf("\n");
-    printf(" %03x", ((uint16_t)~(data[i])) & 0xfff);
+    printf("alarms: %s\n", alarms_to_string(alarms));
   }
-
-  for (i = 0; i < 80; ++i)
+  else if (data != NULL)
   {
-    if (!(i % 10))
-      printf("\n");
-    printf("%c", ~(data[i]));
+    for (i = 0; i < 80; ++i)
+    {
+      if (!(i % 8))
+	printf("\n");
+      printf(" %03x", ((uint16_t)~(data[i])) & 0xfff);
+    }
+
+    for (i = 0; i < 80; ++i)
+    {
+      if (!(i % 10))
+	printf("\n");
+      printf("%c", ~(data[i]));
+    }
   }
 
   return 0;
@@ -118,7 +125,7 @@ print_alarms(m600_alarms_t alarms)
   for (a = 0; a < M600_ALARM_MAX; ++a)
   {
     if (alarms & (1 << a))
-      printf(" %s\n", alarm_to_string(a));
+      printf(" %s\n", alarms_to_string(a));
   }
 }
 
