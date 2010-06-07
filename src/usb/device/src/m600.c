@@ -2,13 +2,12 @@
 ** Made by fabien le mentec <texane@gmail.com>
 ** 
 ** Started on  Wed Nov 11 14:00:09 2009 texane
-** Last update Wed Jun  2 22:00:40 2010 texane
+** Last update Mon Jun  7 19:45:13 2010 texane
 */
 
 
 
 #include <pic18fregs.h>
-#include "serial.h"
 #include "ep2.h"
 #include "stdint.h"
 #include "../../../common/m600_types.h"
@@ -42,6 +41,8 @@ static m600_reply_t m600_reply;
 #define M600_PIN_ERROR PORTDbits.RD0
 #define M600_PIN_HOPPER_CHECK PORTDbits.RD1
 #define M600_PIN_MOTION_CHECK PORTDbits.RD2
+
+#define M600_IS_ANY_ERROR() ((PORTD & ((1 << 3) - 1)) != (0x7))
 
 #define M600_TRIS_PICK_CMD TRISDbits.TRISD3
 #define M600_PIN_PICK_CMD LATDbits.LATD3
@@ -100,7 +101,7 @@ static uint16_t read_data_reg(void)
 
 static m600_alarms_t m600_read_card(uint16_t* col_data)
 {
-  unsigned int col_count;
+  unsigned int col_count = M600_COLUMN_COUNT;
   unsigned int countdown;
 
 #if 0 /* simple_test */
@@ -156,8 +157,6 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 #define COUNTDOWN_10MS 15000
   countdown = COUNTDOWN_10MS;
 
-  col_count = M600_COLUMN_COUNT;
-
   while (col_count)
   {
     /* wait for the INDEX_MARK signal to
@@ -167,8 +166,15 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
        every 864 usecs on the M600.
     */
 
+#if 0
     if ((--countdown) == 0)
       return (M600_ALARM_ERROR | m600_read_alarms());
+#else
+#if 0
+    if (M600_IS_ANY_ERROR())
+      return (M600_ALARM_ERROR | m600_read_alarms());
+#endif
+#endif
 
     if (!M600_PIN_INDEX_MARK)
     {
@@ -176,19 +182,30 @@ static m600_alarms_t m600_read_card(uint16_t* col_data)
 	 signal held true for 6 usecs
       */
 
+#if 0
       /* reload the countdown */
       countdown = COUNTDOWN_10MS;
+#endif
 
       while (!M600_PIN_INDEX_MARK)
       {
+#if 0
 	if (!(--countdown))
 	  return (M600_ALARM_ERROR | m600_read_alarms());
+#else
+#if 0
+	if (M600_IS_ANY_ERROR())
+	  return (M600_ALARM_ERROR | m600_read_alarms());
+#endif
+#endif
       }
 
       *col_data = read_data_reg();
 
+#if 0
       /* reload the countdown */
       countdown = COUNTDOWN_10MS;
+#endif
 
       /* advance position */
       ++col_data;
@@ -347,13 +364,7 @@ void m600_schedule(void)
 }
 
 
-static void print_pin(unsigned char n)
-{
-  if (n) serial_writeb('1');
-  else serial_writeb('0');
-}
-
-
+#if 0
 void m600_print_signals(void)
 {
   print_pin(M600_PIN_ERROR);
@@ -363,7 +374,5 @@ void m600_print_signals(void)
   print_pin(M600_PIN_INDEX_MARK);
   print_pin(M600_PIN_NOT_READY);
   print_pin(M600_PIN_BUSY);
-
-  serial_writeb('\r');
-  serial_writeb('\n');
 }
+#endif

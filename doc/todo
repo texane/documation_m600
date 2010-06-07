@@ -1,7 +1,4 @@
-. le reset ne fonctionne pas
- -> la commande reset ne fonctionne pa
- -> le premier reset lors du setup() fonctionne
- -> ensuite, ca fait hanger le device
+. read_state ne retourne rien, mais alarm -> hopper_check + ready
 
 . chez miguel, il me semble que si erreur lors de lecture,
   je dump quand meme une carte. donc bitmap. donc alarms mal
